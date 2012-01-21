@@ -1,20 +1,21 @@
 package com.gartfy.flexmojosprojectcreator;
 
 /*
- * Copyright 2001-2005 The Apache Software Foundation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
- */
+* Copyright 2001-2005 The Apache Software Foundation.
+*
+* Licensed under the Apache License, Version 2.0 (the "License"); you may not
+* use this file except in compliance with the License. You may obtain a copy of
+* the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+* License for the specific language governing permissions and limitations under
+* the License.
+*/
+
 import java.io.File;
 import java.util.ArrayList;
 import javax.xml.parsers.DocumentBuilder;
@@ -29,53 +30,61 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 /**
- * Goal which initialises the project
- * 
+* Goal which initialises the project
+* 
 * @goal initialiseProject
- */
+*/
 public class MyMojo extends AbstractMojo {
 
   /**
-   * The Project Location.
-   *
-   * @parameter expression="${initialiseProject.projectLocation}"
-   * default-value=""
-   */
+  * The Project Location.
+  *
+  * @parameter expression="${initialiseProject.projectLocation}"
+  * default-value=""
+  */
+  
   private String projectLocation;
   /**
-   * The Workspace Location.
-   *
-   * @parameter expression="${initialiseProject.workspaceLocation}"
-   * default-value=""
-   */
+  * The Workspace Location.
+  *
+  * @parameter expression="${initialiseProject.workspaceLocation}"
+  * default-value=""
+  */
   private String workspaceLocation;
+  
   /**
-   * The Project Source Directory.
-   */
+  * The Project Source Directory.
+  */
   private String sourceDirectory;
+  
   /**
-   * The Project Test Source Directory.
-   */
+  * The Project Test Source Directory.
+  */
   private String testSourceDirectory;
+  
   /**
-   * The Project Resource Directories.
-   */
+  * The Project Resource Directories.
+  */
   private ArrayList<String> resourceDirectories;
+  
   /**
-   * System HOME Environment string
-   */
+  * System HOME Environment string
+  */
   private String homeDirectory;
+  
   /**
-   * local repository path
-   */
+  * local repository path
+  */
   private String localRepositoryPath;
+  
   /**
-   * Main application file
-   */
+  * Main application file
+  */
   private String mainApplicationFile = "Empty.as";
+  
   /**
-   * Set if the project is a library project
-   */
+  * Set if the project is a library project
+  */
   private Boolean isLibraryProject = false;
 
   public void execute() throws MojoExecutionException {
@@ -138,17 +147,20 @@ public class MyMojo extends AbstractMojo {
 
       Exception x = e.getException();
 
-      if (x == null) {
+      if (x == null) {       
+        getLog().error( e.getMessage() );
       } else {
+        getLog().error( x.getMessage() );
       }
 
     } catch (Throwable t) {
+      getLog().error( t.getMessage() );
     }
-  }
-
+  }  
+  
   /**
-   * Parse the Build node of the effective POM
-   */
+  * Parse the Build node of the effective POM
+  */
   private void parseBuildElements(Node buildNode) {
 
     // Set the children nodes from the buildNode node
@@ -177,8 +189,8 @@ public class MyMojo extends AbstractMojo {
   }
 
   /**
-   * Parse the dependencies
-   */
+  * Parse the dependencies
+  */
   private void parseDependencies(Node dependenciesNode) {
 
     String artifactID = "";
@@ -253,8 +265,8 @@ public class MyMojo extends AbstractMojo {
   }
 
   /**
-   * Check if the dependency is meant to be excluded
-   */
+  * Check if the dependency is meant to be excluded
+  */
   private Boolean checkDependencyExclusion(String value) {
 
     Boolean exclude = false;
@@ -273,8 +285,8 @@ public class MyMojo extends AbstractMojo {
   }
 
   /**
-   * Add the following slash to any given string
-   */
+  * Add the following slash to any given string
+  */
   private String addFollowingSlash(String path) {
 
     if (!"/".equals(Character.toString(path.charAt(path.length() - 1)))) {
@@ -285,15 +297,15 @@ public class MyMojo extends AbstractMojo {
   }
 
   /**
-   *
-   */
+  *
+  */
   private String convertToPath(String value) {
     return value.replace(".", "/");
   }
 
   /**
-   *
-   */
+  *
+  */
   private Boolean libraryProjectCheck(Node propertiesNode) {
 
     NodeList nodes = propertiesNode.getChildNodes();
@@ -313,8 +325,8 @@ public class MyMojo extends AbstractMojo {
   }
 
   /**
-   * Parse the resource path directory
-   */
+  * Parse the resource path directory
+  */
   private void parseResourceElement(Node resourceNode) {
 
     NodeList resourceNodes = resourceNode.getChildNodes();
@@ -347,41 +359,45 @@ public class MyMojo extends AbstractMojo {
     }
     resourceDirectories.add("<compilerSourcePathEntry kind='1' linkType='1' path='" + loc + "' />");
   }
+  
   /**
-   * The Libraries ArrayList
-   *
-   * @parameter property="libraries"
-   */
+  * The Libraries ArrayList
+  *
+  * @parameter property="libraries"
+  */
   private ArrayList<String> mLibraries;
 
   public void setLibraries(ArrayList<String> libraries) {
     mLibraries = libraries;
   }
+  
   /**
-   * The Excludes ArrayList
-   *
-   * @parameter property="excludes"
-   */
+  * The Excludes ArrayList
+  *
+  * @parameter property="excludes"
+  */
   private ArrayList<String> mExcludes;
 
   public void setExcludes(ArrayList<String> excludes) {
     mExcludes = excludes;
   }
+  
   /**
-   * The Includes ArrayList
-   *
-   * @parameter property="includes"
-   */
+  * The Includes ArrayList
+  *
+  * @parameter property="includes"
+  */
   private ArrayList<String> mIncludes;
 
   public void setIncludes(ArrayList<String> includes) {
     mIncludes = includes;
   }
+  
   /**
-   * The Attachments ArrayList
-   *
-   * @parameter property="attachments"
-   */
+  * The Attachments ArrayList
+  *
+  * @parameter property="attachments"
+  */
   private ArrayList<String> mAttachments;
 
   public void setAttachments(ArrayList<String> attachments) {

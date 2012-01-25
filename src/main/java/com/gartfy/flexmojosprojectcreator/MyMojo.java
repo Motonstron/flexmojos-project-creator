@@ -136,11 +136,21 @@ public class MyMojo extends AbstractMojo {
                 Node node = nodes.item(i);
 
                 if (node.getNodeType() == Node.ELEMENT_NODE) {
-                    if ("build".equals(node.getNodeName().toLowerCase())) {
+                    if ("project".equals(node.getNodeName())) {
+                        NodeList projects = node.getChildNodes();
+                        for (int j = 0; j < projects.getLength(); j++) {
+                            Node projectNode = projects.item(j);
+                            if( projectNode.getNodeType() == Node.ELEMENT_NODE ){
+                                if("packaging".equals(projectNode.getNodeName()) && "pom".equals(projectNode.getFirstChild().getNodeValue())) {
+                                    return;
+                                }
+                            }
+                        }
+                    } else if ("build".equals(node.getNodeName())) {
                         parseBuildElements(node);
-                    } else if ("dependencies".equals(node.getNodeName().toLowerCase())) {
+                    } else if ("dependencies".equals(node.getNodeName())) {
                         parseDependencies(node);
-                    } else if ("properties".equals(node.getNodeName().toLowerCase())) {
+                    } else if ("properties".equals(node.getNodeName())) {
                         libraryProjectCheck(node);
                     }
                 }
@@ -161,32 +171,29 @@ public class MyMojo extends AbstractMojo {
             writeActionScriptProperties();
             
             // Write the .project file
-//            writeProjectProperties();
-            
+            writeProjectProperties();
+
             // If the project is a flex froject, write the .flexLibProperties file
-//            if(isLibraryProject == true){
-//                writeFlexLibraryProperties();
-//            }
-            
+            if(isLibraryProject == true){
+                writeFlexLibraryProperties();
+            }
         } catch (SAXParseException err) {
             getLog().error( "// XML Parsing Error: " + err.getLineNumber() + ", uri: " + err.getSystemId() + "\n// Error Message:\n\n" + err.getMessage() );
-            } catch (SAXException e) {
-
+        } catch (SAXException e) {
             Exception x = e.getException();
-
             if( x == null ){
                 e.printStackTrace();
             } else {
                 x.printStackTrace();
             }
-
-            } catch (Throwable t) {
-                t.printStackTrace();
-            }
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
     }
     
     /**
      * 
+     * @throws MojoExecutionException 
      */
     private void writeActionScriptProperties() throws MojoExecutionException{
         
@@ -194,7 +201,7 @@ public class MyMojo extends AbstractMojo {
         String libs = "";
         
         if( mIncludes != null ){
-            libs = " -include-libraries";
+            libs = " -include-libraries+=";
             for (Iterator<String> it = mIncludes.iterator(); it.hasNext();) {
                 String lib = it.next();
                 libs += lib + ",";
@@ -208,7 +215,7 @@ public class MyMojo extends AbstractMojo {
             w = new FileWriter( actionScriptProperties );
             w.write("<?xml version='1.0' encoding='UTF-8' standalone='no'?>\n" +
                     "<actionScriptProperties analytics='false' mainApplicationPath='" + mainApplicationFile + "' projectUUID='a03ae41b-a6a9-4d0a-83d9-962b5ea5c7fb' version='10'>\n" +
-                    "<compiler additionalCompilerArguments='" + swfVersion + "'" + libs + conditionalCompiler + " autoRSLOrdering='true' copyDependentFiles='true' flexSDK='Flex 4.5.1' fteInMXComponents='false' generateAccessible='true' htmlExpressInstall='true' htmlGenerate='true' htmlHistoryManagement='true' htmlPlayerVersionCheck='true' includeNetmonSwc='false' outputFolderPath='bin-debug' removeUnusedRSL='true' sourceFolderPath='" + sourceDirectory + "' strict='true' targetPlayerVersion='11.0.0' useApolloConfig='false' useDebugRSLSwfs='true' verifyDigests='true' warn='true'>\n" +
+                    "<compiler additionalCompilerArguments='" + swfVersion + libs + conditionalCompiler + "' autoRSLOrdering='true' copyDependentFiles='true' flexSDK='" + mFlexSDKVersion + "' fteInMXComponents='false' generateAccessible='true' htmlExpressInstall='true' htmlGenerate='true' htmlHistoryManagement='true' htmlPlayerVersionCheck='true' includeNetmonSwc='false' outputFolderPath='bin-debug' removeUnusedRSL='true' sourceFolderPath='" + sourceDirectory + "' strict='true' targetPlayerVersion='" + mTargetPlayerVersion + "' useApolloConfig='false' useDebugRSLSwfs='true' verifyDigests='true' warn='true'>\n" +
                     "<compilerSourcePath>\n" + 
                         "<compilerSourcePathEntry kind='1' linkType='1' path='" + testSourceDirectory + "' />\n" +
                         resourceDirectories + "\n" +
@@ -233,7 +240,6 @@ public class MyMojo extends AbstractMojo {
                     "<flashCatalyst validateFlashCatalystCompatibility='false'/>\n" + 
                     "</actionScriptProperties>"
             );
-            
         } catch( IOException e ) {
             throw new MojoExecutionException("Error creating file: " + actionScriptProperties, e );
         } finally {
@@ -245,29 +251,103 @@ public class MyMojo extends AbstractMojo {
                 }
             }
         }
-        
-        getLog().info("Created actionScriptProperties");
     }
     
     /**
      * 
+     * @throws MojoExecutionException 
      */
     private void writeProjectProperties() throws MojoExecutionException{
         
+        File project = new File( projectLocation, ".project" );
+        FileWriter w = null;
+        
+        String flexProperty = isLibraryProject ? "<nature>com.adobe.flexbuilder.project.flexlibnature</nature>\n" : "";
+        String[] projectName = projectLocation.split("/");
+        
+        try{
+            w = new FileWriter( project );
+            w.write("<?xml version='1.0' encoding='UTF-8'?>\n" +
+                    "<projectDescription>\n" + 
+                    "<name>" + projectName[projectName.length -1] + "</name>\n" + 
+                    "<comment></comment>\n" + 
+                    "<projects></projects>\n" +
+                    "<buildSpec>\n" +
+                    "<buildCommand>\n" +
+                    "<name>com.adobe.flexbuilder.project.flexbuilder</name>\n" +
+                    "<arguments></arguments>\n" +
+                    "</buildCommand>\n" +
+                    "<buildCommand>\n" + 
+                    "<name>org.maven.ide.eclipse.maven2Builder</name>\n" + 
+                    "<arguments></arguments>\n" +
+                    "</buildCommand>\n" + 
+                    "</buildSpec>\n" + 
+                    "<natures>\n" + 
+                    "<nature>org.maven.ide.eclipse.maven2Nature</nature>\n" + 
+                    flexProperty +
+                    "<nature>com.adobe.flexbuilder.project.actionscriptnature</nature>\n" +
+                    "</natures>\n" +
+                    "</projectDescription>");
+            
+        } catch( IOException e ) {
+            throw new MojoExecutionException("Error creating file: " + project, e );
+        } finally {
+            if( w != null ){
+                try{
+                    w.close();
+                } catch( IOException e ){
+                    // ignore
+                }
+            }
+        }
     }
     
     /**
      * 
+     * @throws MojoExecutionException 
      */
     private void writeFlexLibraryProperties() throws MojoExecutionException{
+        
+        File flexLibsProperties = new File( projectLocation, ".flexLibsProperties" );
+        FileWriter w = null;
+        
+        String nameSpaceManifest = "<namespaceManifests/>\n";
+        
+        if( resourceDirectories.length() == 0 && hasManifestFile ){
+            nameSpaceManifest =  "<namespaceManifests>\n<namespaceManifestEntry manifest='manifest.xml' namespace='" + namespaceURI + "'/>\n</namespaceManifests>";
+        }
+        
+        try{
+            w = new FileWriter( flexLibsProperties );
+            w.write("<?xml version='1.0' encoding='UTF-8' standalone='no'?>\n" +
+                    "<flexLibProperties includeAllClasses='true'  useMultiPlatformConfig='false' version='3'>\n" + 
+                    "<includeClasses/>\n" +
+                    "<includeResources/>\n" +
+                    nameSpaceManifest +
+                    "</flexLibProperties>");
+            
+        } catch( IOException e ) {
+            throw new MojoExecutionException("Error creating file: " + flexLibsProperties, e );
+        } finally {
+            if( w != null ){
+                try{
+                    w.close();
+                } catch( IOException e ){
+                    // ignore
+                }
+            }
+        }
         
     }
 
     /**
+     * 
      * Parse the Build node of the effective POM
+     * 
+     * @param buildNode 
      */
     private void parseBuildElements(Node buildNode) {
-
+        
         // Set the children nodes from the buildNode node
         NodeList nodes = buildNode.getChildNodes();
 
@@ -277,13 +357,16 @@ public class MyMojo extends AbstractMojo {
             
             if (node.getNodeType() == Node.ELEMENT_NODE) {
                 if ("sourceDirectory".equals(node.getNodeName())) {
-                    sourceDirectory = node.getFirstChild().getNodeValue();
+                    sourceDirectory = performJoin(node.getFirstChild().getNodeValue(), projectLocation);
                 } else if ("testSourceDirectory".equals(node.getNodeName())) {
-                    testSourceDirectory = node.getFirstChild().getNodeValue();
+                    testSourceDirectory = performJoin(node.getFirstChild().getNodeValue(), projectLocation);
                 } else if ("resources".equals(node.getNodeName())) {
                     NodeList resourceNodes = node.getChildNodes();
                     for (int a = 0; a < resourceNodes.getLength(); a++) {
-                        parseResourceElement(resourceNodes.item(a));
+                        Node resourceNode = resourceNodes.item(a);
+                        if( resourceNode.getNodeType() == Node.ELEMENT_NODE ){
+                            parseResourceElement(resourceNode);
+                        }
                     }
                 } else if ("plugins".equals(node.getNodeName())) {
                     NodeList pluginNodes = node.getChildNodes();
@@ -333,11 +416,10 @@ public class MyMojo extends AbstractMojo {
      */
     private void initConditionalCompilerSettings( Node configurationNode ){
        
-        String propertyName = null;
-        String propertyValue = null;
+        String propertyName = "";
+        String propertyValue = "";
         
-        NodeList propertyNodes = configurationNode.getFirstChild().getChildNodes();
-        
+        NodeList propertyNodes = configurationNode.getFirstChild().getNextSibling().getChildNodes();
         for (int i = 0; i < propertyNodes.getLength(); i++) {
             Node propertyNode = propertyNodes.item(i);
             if(propertyNode.getNodeType() == Node.ELEMENT_NODE){
@@ -348,7 +430,6 @@ public class MyMojo extends AbstractMojo {
                 }
             }
         }
-        
         conditionalCompiler = " -define=" + propertyName + "," + propertyValue;
     }
     
@@ -383,7 +464,6 @@ public class MyMojo extends AbstractMojo {
                 }
             }
         }
-        
         return hasManifestFile;
     }
     
@@ -403,11 +483,13 @@ public class MyMojo extends AbstractMojo {
                 }
             }
         }
-        
     }
 
     /**
+     * 
      * Parse the dependencies
+     * 
+     * @param dependenciesNode 
      */
     private void parseDependencies(Node dependenciesNode) {
 
@@ -416,6 +498,8 @@ public class MyMojo extends AbstractMojo {
         String groupID = "";
         String scope = "";
         String attachmentSourcePath = "";
+        
+        Boolean exclude = false;
 
         // Set the children nodes from the dependenciesNode
         NodeList nodes = dependenciesNode.getChildNodes();
@@ -426,7 +510,7 @@ public class MyMojo extends AbstractMojo {
             Node node = nodes.item(i);
 
             if (node.getNodeType() == Node.ELEMENT_NODE) {
-
+                
                 NodeList dependencyNodes = node.getChildNodes();
 
                 for (int a = 0; a < dependencyNodes.getLength(); a++) {
@@ -445,11 +529,11 @@ public class MyMojo extends AbstractMojo {
 
                         // Run the check to see if the dependency is to be excluded
                         // Set the exclude flag to determine if the dependency is needed
-                        Boolean exclude = checkDependencyExclusion(groupID);
+                        exclude = checkDependencyExclusion(groupID);
 
                         if (!exclude) {
                             localRepositoryPath = homeDirectory + "/.m2/repository/"
-                                    + convertToPath(groupID) + artifactID + "/" + version + "/"
+                                    + convertToPath(groupID) + "/" + artifactID + "/" + version + "/"
                                     + artifactID + "-" + version + ".swc";
                         }
 
@@ -473,21 +557,27 @@ public class MyMojo extends AbstractMojo {
                 if (dir.isDirectory()) {
                     attachmentSourcePath = "${DOCUMENTS}/" + artifactID + "/" + sourceDirectory;
                     mAttachments.add("<sourceAttachmentPathEntry kind='3' linkType='1' path='"
-                            + localRepositoryPath + "' sourcePath='" + attachmentSourcePath + "' useDefaultLinkType='false' />");
+                            + localRepositoryPath + "' sourcepath='" + attachmentSourcePath + "' useDefaultLinkType='false' />");
                 }
 
                 if (mLibraries == null) {
                     mLibraries = new ArrayList<String>();
                 }
-
-                mLibraries.add("<libraryPathEntry kind='3' linkType='1' path='" + localRepositoryPath
-                        + "' sourcePath='" + attachmentSourcePath + "' useDefaultLinkType='false' />");
+                
+                if( !exclude ){
+                    mLibraries.add("<libraryPathEntry kind='3' linkType='1' path='" + localRepositoryPath
+                        + "' sourcepath='" + attachmentSourcePath + "' useDefaultLinkType='false' />");
+                }                   
             }
         }
     }
 
     /**
+     * 
      * Check if the dependency is meant to be excluded
+     * 
+     * @param value
+     * @return 
      */
     private Boolean checkDependencyExclusion(String value) {
 
@@ -507,7 +597,11 @@ public class MyMojo extends AbstractMojo {
     }
 
     /**
+     * 
      * Add the following slash to any given string
+     * 
+     * @param path
+     * @return 
      */
     private String addFollowingSlash(String path) {
 
@@ -517,16 +611,33 @@ public class MyMojo extends AbstractMojo {
             return path;
         }
     }
-
+    
     /**
-     *
+     * 
+     * @param value
+     * @return 
      */
     private String convertToPath(String value) {
         return value.replace(".", "/");
     }
+    
+    private String performJoin( String value, String split ){
+        
+        String[] splits;
+        String returnValue = "";
+        
+        splits = value.split(split);
+        
+        for (String s : splits) {
+            returnValue += s;
+        }
+        return returnValue;
+    }
 
     /**
-     *
+     * 
+     * @param propertiesNode
+     * @return 
      */
     private Boolean libraryProjectCheck(Node propertiesNode) {
 
@@ -547,25 +658,28 @@ public class MyMojo extends AbstractMojo {
     }
 
     /**
+     * 
      * Parse the resource path directory
+     * 
+     * @param node 
      */
-    private void parseResourceElement(Node resourceNode) {
+    private void parseResourceElement(Node node) {
 
-        NodeList resourceNodes = resourceNode.getChildNodes();
+        NodeList resourceNodes = node.getChildNodes();
 
         String[] splits;
         String loc = "";
 
         for (int i = 0; i < resourceNodes.getLength(); i++) {
-            Node directoryNode = resourceNodes.item(i);
-            if (directoryNode.getNodeType() == Node.ELEMENT_NODE && "directory".equals(directoryNode.getNodeName())) {
-                splits = directoryNode.getFirstChild().getNodeValue().split(projectLocation);
+            Node resourceNode = resourceNodes.item(i);
+            if (resourceNode.getNodeType() == Node.ELEMENT_NODE && "directory".equals(resourceNode.getNodeName())) {
+                splits = resourceNode.getFirstChild().getNodeValue().split(projectLocation);
                 if (splits.length > 1) {
                     for (String s : splits) {
                         loc += s;
                     }
                 } else {
-                    splits = directoryNode.getFirstChild().getNodeValue().split(workspaceLocation);
+                    splits = resourceNode.getFirstChild().getNodeValue().split(workspaceLocation);
                     if (splits.length > 1) {
                         loc = "../";
                         for (String s : splits) {
@@ -575,7 +689,6 @@ public class MyMojo extends AbstractMojo {
                 }
             }
         }
-
         resourceDirectories = "<compilerSourcePathEntry kind='1' linkType='1' path='" + loc + "' />";
     }
     
@@ -621,5 +734,29 @@ public class MyMojo extends AbstractMojo {
 
     public void setAttachments(ArrayList<String> attachments) {
         mAttachments = attachments;
+    }
+    
+    /**
+     * Set the Flex SDK Version Externally, 
+     * Default Flex SDK Version is set to 'Flex 4.5.1'
+     *
+     * @parameter property="flexSDKVersion"
+     */
+    private String mFlexSDKVersion = "Flex 4.5.1";
+    
+    public void setFlexSDKVersion( String flexSDKVersion ) {
+        mFlexSDKVersion = flexSDKVersion;
+    }
+    
+    /**
+     * Set the Target Player Version, 
+     * Default Player Version is set to '11.0.0'
+     *
+     * @parameter property="targetPlayerVersion"
+     */
+    private String mTargetPlayerVersion = "11.0.0";
+    
+    public void setFlashPlayerVersion( String targetPlayerVersion ) {
+        mTargetPlayerVersion = targetPlayerVersion;
     }
 }

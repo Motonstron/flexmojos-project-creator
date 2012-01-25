@@ -1,4 +1,4 @@
-package com.gartfy.flexmojosprojectcreator;
+package com.garfty.flexmojosprojectcreator;
 
 /*
  * Copyright 2001-2005 The Apache Software Foundation.

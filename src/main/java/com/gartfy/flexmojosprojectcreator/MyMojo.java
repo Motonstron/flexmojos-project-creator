@@ -33,8 +33,9 @@ import org.xml.sax.SAXParseException;
 
 /**
  * Goal which initialises the project
- * 
-* @goal initialiseProject
+ *
+ * @goal initialiseProject
+ * @phase validate
  */
 public class MyMojo extends AbstractMojo {
 

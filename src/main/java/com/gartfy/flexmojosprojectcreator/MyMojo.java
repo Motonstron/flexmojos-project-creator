@@ -308,7 +308,7 @@ public class MyMojo extends AbstractMojo {
      */
     private void writeFlexLibraryProperties() throws MojoExecutionException{
         
-        File flexLibsProperties = new File( projectLocation, ".flexLibsProperties" );
+        File flexLibsProperties = new File( projectLocation, ".flexLibProperties" );
         FileWriter w = null;
         
         String nameSpaceManifest = "<namespaceManifests/>\n";

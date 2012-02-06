@@ -153,7 +153,6 @@ public class MyMojo extends AbstractMojo {
                         parseDependencies(node);
                     } else if ("properties".equals(node.getNodeName())) {
                         libraryProjectCheck(node);
-                        getLog().info("IS LIBRARY PROJECT: " + isLibraryProject);
                     }
                 }
             }
@@ -502,7 +501,7 @@ public class MyMojo extends AbstractMojo {
         String scope = "";
         String attachmentSourcePath = "";
         
-        Boolean exclude;
+        Boolean exclude = false;
 
         // Set the children nodes from the dependenciesNode
         NodeList nodes = dependenciesNode.getChildNodes();

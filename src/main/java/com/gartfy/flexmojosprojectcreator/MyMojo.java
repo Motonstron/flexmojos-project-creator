@@ -494,6 +494,7 @@ public class MyMojo extends AbstractMojo {
      */
     private void parseDependencies(Node dependenciesNode) {
 
+        String type = "";
         String artifactID = "";
         String version = "";
         String groupID = "";
@@ -518,7 +519,9 @@ public class MyMojo extends AbstractMojo {
                     Node dependencyNode = dependencyNodes.item(a);
 
                     if (dependencyNode.getNodeType() == Node.ELEMENT_NODE) {
-                        if ("artifactId".equals(dependencyNode.getNodeName())) {
+                        if( "type".equals(dependencyNode.getNodeName())) {
+                            type = dependencyNode.getFirstChild().getNodeValue();
+                        } else if ("artifactId".equals(dependencyNode.getNodeName())) {
                             artifactID = dependencyNode.getFirstChild().getNodeValue();
                         } else if ("groupId".equals(dependencyNode.getNodeName())) {
                             groupID = dependencyNode.getFirstChild().getNodeValue();
@@ -527,26 +530,26 @@ public class MyMojo extends AbstractMojo {
                         } else if ("scope".equals(dependencyNode.getNodeName())) {
                             scope = dependencyNode.getFirstChild().getNodeValue();
                         }
-
-                        // Run the check to see if the dependency is to be excluded
-                        // Set the exclude flag to determine if the dependency is needed
-                        exclude = checkDependencyExclusion(groupID);
-
-                        if (!exclude) {
-                            localRepositoryPath = homeDirectory + "/.m2/repository/"
-                                    + convertToPath(groupID) + "/" + artifactID + "/" + version + "/"
-                                    + artifactID + "-" + version + ".swc";
-                        }
-
-                        // Check if the scope is internal, and add it to the Includes ArrayList
-                        if ("internal".equals(scope)) {
-                            if (mIncludes == null) {
-                                mIncludes = new ArrayList<String>();
-                            }
-                            
-                            mIncludes.add(localRepositoryPath);
-                        }
                     }
+                }
+
+                // Run the check to see if the dependency is to be excluded
+                // Set the exclude flag to determine if the dependency is needed
+                exclude = checkDependencyExclusion(groupID);
+
+                if (!exclude) {
+                    localRepositoryPath = homeDirectory + "/.m2/repository/"
+                            + convertToPath(groupID) + "/" + artifactID + "/" + version + "/"
+                            + artifactID + "-" + version + ".swc";
+                }
+
+                // Check if the scope is internal, and add it to the Includes ArrayList
+                if ("internal".equals(scope)) {
+                    if (mIncludes == null) {
+                        mIncludes = new ArrayList<String>();
+                    }
+
+                    mIncludes.add(localRepositoryPath);
                 }
 
                 File dir = new File(projectLocation + "../.metadata/.plugins/org.eclipse.core.resources/.projects/" + artifactID);
@@ -565,7 +568,7 @@ public class MyMojo extends AbstractMojo {
                     mLibraries = new ArrayList<String>();
                 }
                 
-                if( !exclude ){
+                if( !exclude && "swc".equals(type)){
                     mLibraries.add("<libraryPathEntry kind='3' linkType='1' path='" + localRepositoryPath
                         + "' sourcepath='" + attachmentSourcePath + "' useDefaultLinkType='false' />");
                 }                   

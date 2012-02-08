@@ -177,6 +177,7 @@ public class MyMojo extends AbstractMojo {
             if(isLibraryProject == true){
                 writeFlexLibraryProperties();
             }
+            
         } catch (SAXParseException err) {
             getLog().error( "// XML Parsing Error: " + err.getLineNumber() + ", uri: " + err.getSystemId() + "\n// Error Message:\n\n" + err.getMessage() );
         } catch (SAXException e) {
@@ -645,18 +646,21 @@ public class MyMojo extends AbstractMojo {
     private Boolean libraryProjectCheck(Node propertiesNode) {
 
         NodeList nodes = propertiesNode.getChildNodes();
-
+        
         for (int i = 0; i < nodes.getLength(); i++) {
             Node node = nodes.item(i);
-
+            
             if (node.getNodeType() == Node.ELEMENT_NODE) {
-                if ("library".equals(node.getNodeName()) && "true".equals(node.getFirstChild().getNodeValue())) {
-                    isLibraryProject = true;
-                } else {
-                    isLibraryProject = false;
+                if ("library".equals(node.getNodeName())) {
+                    if( "true".equals(node.getFirstChild().getNodeValue())){
+                        isLibraryProject = true;
+                    } else {
+                        isLibraryProject = false;
+                    }
                 }
             }
         }
+        
         return isLibraryProject;
     }
 

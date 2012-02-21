@@ -33,3 +33,8 @@ ehthumbs.db
 Icon?
 Thumbs.db
 /target/
+
+# IDE generated files #
+#######################
+
+*.iml

@@ -104,7 +104,11 @@ public class MyMojo extends AbstractMojo {
      * Conditional Compiler element
      */
     private String conditionalCompiler = "";
-    
+
+    /**
+     * Execution function
+     * @throws MojoExecutionException
+     */
     public void execute() throws MojoExecutionException {
         
         // Add the following slash to the project location
@@ -113,7 +117,7 @@ public class MyMojo extends AbstractMojo {
         // Get the effective pom and parse the dependencies
         File effectivePom = new File(projectLocation + "target/classes/effective-pom.xml");
 
-        // Set the homdirectory from the system variable
+        // Set the home directory from the system variable
         homeDirectory = System.getenv("HOME");
 
         try {

@@ -4,7 +4,7 @@
   <groupId>com.garfty</groupId>
   <artifactId>flexmojos-project-creator</artifactId>
   <packaging>maven-plugin</packaging>
-  <version>2.0-SNAPSHOT</version>
+  <version>3.0-SNAPSHOT</version>
   <name>flexmojos-project-creator Maven Mojo</name>
   <url>http://maven.apache.org</url>
   <dependencies>

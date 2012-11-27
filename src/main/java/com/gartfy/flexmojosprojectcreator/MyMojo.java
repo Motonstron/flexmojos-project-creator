@@ -1,4 +1,4 @@
-package com.garfty.flexmojosprojectcreator;
+package com.gartfy.flexmojosprojectcreator;
 
 /*
  * Copyright 2001-2005 The Apache Software Foundation.
@@ -105,6 +105,12 @@ public class MyMojo extends AbstractMojo {
      */
     private String conditionalCompiler = "";
 
+
+    /**
+     * Sets the file separator for the system.
+     */
+    private String fileSeparator = System.getProperty("file.separator");
+
     /**
      * Execution function
      * @throws MojoExecutionException
@@ -118,7 +124,13 @@ public class MyMojo extends AbstractMojo {
         File effectivePom = new File(projectLocation + "target/classes/effective-pom.xml");
 
         // Set the home directory from the system variable
-        homeDirectory = System.getenv("HOME");
+        homeDirectory = System.getProperty("user.home");
+
+        if(fileSeparator == "\\"){
+            while (homeDirectory.contains("\\")) {
+                homeDirectory.replace("\\", "/");
+            }
+        }
 
         try {
             // Declare a new Document Factory Builder / Document Builder for the XML
@@ -269,13 +281,13 @@ public class MyMojo extends AbstractMojo {
         FileWriter w = null;
         
         String flexProperty = isLibraryProject ? "<nature>com.adobe.flexbuilder.project.flexlibnature</nature>\n" : "";
-        String[] projectName = projectLocation.split("/");
-        
+        String[] projectName = projectLocation.split("\\\\");
+
         try{
             w = new FileWriter( project );
             w.write("<?xml version='1.0' encoding='UTF-8'?>\n" +
                     "<projectDescription>\n" + 
-                    "<name>" + projectName[projectName.length -1] + "</name>\n" + 
+                    "<name>" + projectName[projectName.length -1] + "</name>\n" +
                     "<comment></comment>\n" + 
                     "<projects></projects>\n" +
                     "<buildSpec>\n" +
@@ -415,10 +427,10 @@ public class MyMojo extends AbstractMojo {
             }
         } 
     }
-    
+
     /**
-     * 
-     * @param node 
+     *
+     * @param configurationNode
      */
     private void initConditionalCompilerSettings( Node configurationNode ){
        
@@ -614,8 +626,8 @@ public class MyMojo extends AbstractMojo {
      */
     private String addFollowingSlash(String path) {
 
-        if (!"/".equals(Character.toString(path.charAt(path.length() - 1)))) {
-            return path + "/";
+        if (!fileSeparator.equals(Character.toString(path.charAt(path.length() - 1)))) {
+            return path + fileSeparator;
         } else {
             return path;
         }
@@ -627,13 +639,16 @@ public class MyMojo extends AbstractMojo {
      * @return 
      */
     private String convertToPath(String value) {
-        return value.replace(".", "/");
+        return value.replace(".", fileSeparator);
     }
     
     private String performJoin( String value, String split ){
         
         String[] splits;
         String returnValue = "";
+        if (value.startsWith(split)) {
+            return value.substring(split.length());
+        }
         
         splits = value.split(split);
         
@@ -681,11 +696,12 @@ public class MyMojo extends AbstractMojo {
 
         String[] splits;
         String loc = "";
+        String test = "";
 
         for (int i = 0; i < resourceNodes.getLength(); i++) {
             Node resourceNode = resourceNodes.item(i);
             if (resourceNode.getNodeType() == Node.ELEMENT_NODE && "directory".equals(resourceNode.getNodeName())) {
-                splits = resourceNode.getFirstChild().getNodeValue().split(projectLocation);
+                splits = resourceNode.getFirstChild().getNodeValue().split(test);
                 if (splits.length > 1) {
                     for (String s : splits) {
                         loc += s;
@@ -701,6 +717,13 @@ public class MyMojo extends AbstractMojo {
                 }
             }
         }
+
+        if(loc.startsWith(projectLocation)){
+            loc = loc.substring(projectLocation.length());
+        } else if(loc.startsWith(workspaceLocation)){
+            loc = loc.substring(workspaceLocation.length());
+        }
+
         resourceDirectories = "<compilerSourcePathEntry kind='1' linkType='1' path='" + loc + "' />";
     }
     
@@ -727,7 +750,7 @@ public class MyMojo extends AbstractMojo {
     }
     
     /**
-     * The Includes ArrayList
+     * The In mcludes ArrayList
      *
      * @parameter property="includes"
      */
@@ -754,7 +777,7 @@ public class MyMojo extends AbstractMojo {
      *
      * @parameter property="flexSDKVersion"
      */
-    private String mFlexSDKVersion = "Flex 4.5.1";
+    private String mFlexSDKVersion = "Flex 4.6.0";
     
     public void setFlexSDKVersion( String flexSDKVersion ) {
         mFlexSDKVersion = flexSDKVersion;
@@ -766,7 +789,7 @@ public class MyMojo extends AbstractMojo {
      *
      * @parameter property="targetPlayerVersion"
      */
-    private String mTargetPlayerVersion = "11.0.0";
+    private String mTargetPlayerVersion = "11.1.0";
     
     public void setFlashPlayerVersion( String targetPlayerVersion ) {
         mTargetPlayerVersion = targetPlayerVersion;
